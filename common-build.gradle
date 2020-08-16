@@ -1,0 +1,100 @@
+// --- Universal Build Script Start
+
+def pUsername = project.hasProperty("username") ? project.getProperty("username") : null
+def pPassword = project.hasProperty("password") ? project.getProperty("password") : null
+
+def extraProperties = new Properties()
+new File("${rootDir}/version.properties").withInputStream { extraProperties.load(it) }
+def credentialsFile = new File("${rootDir}/credentials-DO-NOT-COMMIT.properties");
+if(credentialsFile.exists()){credentialsFile.withInputStream { extraProperties.load(it) }} else {println "No credentials file found [" + credentialsFile + "], using username " +  pUsername}
+def _groupId = extraProperties['groupId']
+def _artifactId = extraProperties['artifactId']
+def _version = extraProperties['versionCode']
+
+buildscript {  
+  repositories {
+    jcenter() 
+    mavenCentral()
+  }
+}
+
+apply plugin: 'java' 
+apply plugin: 'maven' // Just for the createPom task
+apply plugin: 'maven-publish'
+apply plugin: 'jacoco'
+
+
+repositories { 
+  maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/JFL110/packages")
+            credentials {
+                username = extraProperties["gprUser"] ?: pUsername
+                password = extraProperties["gprKey"] ?: pPassword
+            }
+        }
+  mavenLocal()
+  jcenter()
+  mavenCentral()
+}
+
+jacoco {
+  toolVersion = '0.7.1.201405082137'
+}
+
+jacocoTestReport {
+ reports {
+    html.enabled = true
+    xml.enabled = true
+    csv.enabled = false
+ }
+}
+test.finalizedBy(jacocoTestReport)
+
+publishing {
+  repositories {
+        maven {
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/JFL110/packages")
+            credentials {
+                username = extraProperties["gprUser"] ?: pUsername
+                password = extraProperties["gprKey"] ?: pPassword
+            }
+        }
+    }
+
+    publications {
+        gpr(MavenPublication) {
+           groupId _groupId
+	       artifactId _artifactId
+	       version _version
+           from components.java
+        }
+    }
+}
+
+
+task createPom{
+	doLast {
+	    pom {
+			project {
+			    groupId _groupId
+			    artifactId _artifactId
+			    version _version
+			    properties {
+		            maven {
+		                compiler {
+		                    source '1.8'
+		                    target '1.8'
+		                }
+		            }
+	       	    }
+			}
+	    }.writeTo("pom.xml")
+	}
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+// --- Universal Build Script End
