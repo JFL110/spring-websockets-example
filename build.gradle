@@ -1,25 +1,46 @@
+plugins {
+	id 'org.springframework.boot' version '2.2.0.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+}
 apply from : 'common-build.gradle'
+
+configurations {
+	developmentOnly
+	runtimeClasspath {
+		extendsFrom developmentOnly
+	}
+}
+
+test{
+  minHeapSize = "512m"
+  maxHeapSize = "1024m"
+ }
 
 dependencies {
 
 	// Spring
-	compile group: 'org.springframework', name: 'spring-websocket', version: '5.2.8.RELEASE'
-	compile group: 'org.springframework', name: 'spring-messaging', version: '5.2.8.RELEASE'
+	compile 'org.springframework.boot:spring-boot-starter-thymeleaf:2.3.3.RELEASE'
+	compile 'org.springframework.boot:spring-boot-starter-web:2.3.3.RELEASE'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools:2.3.3.RELEASE'
+	
+	compile group: 'org.springframework', name: 'spring-websocket', version: '5.2.1.RELEASE'
+	compile group: 'org.springframework', name: 'spring-messaging', version: '5.2.1.RELEASE'
 
     // Generally useful java things
     compile group: 'com.google.guava', name: 'guava', version: '29.0-jre'
-
-    // JSON
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: '2.10.1'
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.1'
-    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.10.1'
-    compile group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jdk8', version: '2.10.1'
+    
+    // Logging
+    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
+	compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.3'
 	
     // Test utilities
     testImplementation group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'   
     testImplementation group: 'junit', name: 'junit', version:'4.12'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.4.0'
     testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
+    testImplementation group: 'org.springframework', name: 'spring-test', version: '5.2.1.RELEASE'
+    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.3.3.RELEASE'
+    
 }
 
 sourceCompatibility = 1.8

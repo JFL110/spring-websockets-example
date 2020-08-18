@@ -1,0 +1,109 @@
+<html>
+<head>
+<title>Chat WebSocket</title>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+<style>
+.dot {
+	height: 25px;
+	width: 25px;
+	background-color: #bbb;
+	border-radius: 50%;
+	display: inline-block;
+	position: absolute;
+}
+</style>
+<script type="text/javascript">
+
+	var stompClient = null;
+	var failedConnectionAttempts = 0;
+	var reconnectTimeoutHandle = null;
+	var maxDelaySeconds = 15;
+	var connected = false;
+	
+	function connect() {
+		console.log("Attempting to connect...");
+		var socket = new SockJS('http://localhost:8080/chat');
+		stompClient = Stomp.over(socket);
+		
+		stompClient.connect({},
+			// On Connect
+			frame => {
+				connected = true;
+				failedConnectionAttempts = 0;
+				stompClient.subscribe('/topic/messages', messageOutput => {
+					console.log(messageOutput);
+					var body = JSON.parse(messageOutput.body);
+	
+					var dot = document.createElement("span");
+					dot.classList.add("dot");
+					dot.style.left = body.x - 12.5;
+					dot.style.top = body.y - 12.5;
+					document.body.appendChild(dot);
+	
+					//	messageOutput.ack();
+					//	showMessageOutput();
+			});
+			stompClient.subscribe('/user/topic/messages', messageOutput => {
+				console.log("USER" + messageOutput);
+				//messageOutput.ack();
+				//showMessageOutput(JSON.parse(messageOutput.body));
+			});
+		},
+		// OnError
+		error => {
+			failedConnectionAttempts++;
+			clearTimeout(reconnectTimeoutHandle);
+			stompClient = null;
+			connected = false;
+			var delaySeconds = 2 * failedConnectionAttempts;
+			if(delaySeconds > maxDelaySeconds){
+				delaySeconds = maxDelaySeconds;
+			}
+			reconnectTimeoutHandle = setTimeout(connect, delaySeconds * 1000);
+			console.log("Reconnecting in " + delaySeconds + " seconds...")
+		});
+	}
+	
+	window.addEventListener('load', connect, false);
+
+	function printMousePos(event) {
+		if(!connected){
+			return;
+		}
+		console.log(event.clientX, event.clientY);
+		stompClient.send("/app/chat", {}, JSON.stringify({
+			clientSequenceNumber : clientSequenceNumber++,
+			'x' : event.clientX,
+			'y' : event.clientY
+		}));
+	}
+	document.addEventListener("mousemove", printMousePos);
+	document.addEventListener("click", printMousePos);
+
+	var clientSequenceNumber = 0;
+	function sendMessage() {
+		var from = document.getElementById('from').value;
+		var text = document.getElementById('text').value;
+		stompClient.send("/app/chat", {}, JSON.stringify({
+			clientSequenceNumber : clientSequenceNumber++,
+			'from' : from,
+			'text' : text
+		}));
+	}
+
+	function showMessageOutput(messageOutput) {
+		var response = document.getElementById('response');
+		var p = document.createElement('p');
+		p.style.wordWrap = 'break-word';
+		p.appendChild(document.createTextNode(messageOutput.from + ": "
+				+ messageOutput.text + " (" + messageOutput.time + ")"));
+		response.appendChild(p);
+	}
+</script>
+</head>
+<body>
+</body>
+</html>
