@@ -24,4 +24,5 @@ public class App {
 	public NowProvider nowProvider() {
 		return new NowProvider();
 	}
+
 }

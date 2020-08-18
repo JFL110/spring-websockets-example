@@ -2,6 +2,7 @@ plugins {
 	id 'org.springframework.boot' version '2.2.0.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 }
+
 apply from : 'common-build.gradle'
 
 configurations {
@@ -11,10 +12,25 @@ configurations {
 	}
 }
 
+// TestCanvasManager tests limits and uses a lot of memory
 test{
   minHeapSize = "512m"
   maxHeapSize = "1024m"
  }
+ 
+// Task to bundle .platform, Procfile and the jar into a zip 
+task ebZip(type: Zip ) {
+   dependsOn 'bootJar'
+   from ('./build/libs/'){
+   	include 'spring-websockets.jar'
+   }
+   from ('./'){
+   	include '.platform/**'
+   	include 'Procfile'
+   }
+   archiveName 'spring-websockets-eb-bundle.zip'
+   destinationDir(file('./build/'))
+}
 
 dependencies {
 
