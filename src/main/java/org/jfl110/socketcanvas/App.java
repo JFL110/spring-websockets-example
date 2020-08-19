@@ -20,6 +20,9 @@ public class App {
 	}
 
 
+	/**
+	 * @return a provider of the current time.
+	 */
 	@Bean
 	public NowProvider nowProvider() {
 		return new NowProvider();
