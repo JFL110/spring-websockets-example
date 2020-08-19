@@ -28,7 +28,7 @@ jobs:
     - name: Produce Zip
       run: ./gradlew ebZip -Pusername=JFL110 -Ppassword=${{ secrets.GP_PUBLISH_TOKEN }}
     - name: Upload to Test Env
-       uses: einaregilsson/beanstalk-deploy@v11
+      uses: einaregilsson/beanstalk-deploy@v11
       with:
         aws_access_key: ${{ secrets.AWS_ID }}
         aws_secret_key: ${{ secrets.AWS_KEY }}
