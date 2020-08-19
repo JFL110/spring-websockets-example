@@ -17,7 +17,7 @@ Websocket operation is tested by spinning up an in-test webserver and performing
 A simple text endpoint is exposed to show the state of the application [here](http://springwebsocketsexample2-env.eba-9wepzsai.eu-west-2.elasticbeanstalk.com/).
 
 ## Infrastructure
-The application is deployed on AWS Elastic Beanstalk. Automatic deployment is trigger when this repository is published, using Github Actions. This includes building and testing the application jar with Gradle, bundling with configuration for NGinx used on the Elastic Beanstalk instances and uploading.
+The application is deployed on AWS Elastic Beanstalk. Automatic deployment is triggered when the version.properties file is modified, using Github Actions. This includes building and testing the application jar with Gradle, bundling with configuration for NGinx used on the Elastic Beanstalk instances and uploading.
 
 The frontend is hosted in an S3 bucket and served via a Cloudfront distribution. [Lambda@Edge functions](https://github.com/JFL110/spring-websockets-example-frontend/blob/master/cloudfront-lamda-edge.md) are used to route all requests to a single page, implement a caching policy and to serve pre-compressed GZip and Brotli content where possible. These optimisations give the frontend a score of over 97% on [PageSpeed Insights](https://developers.google.com/speed/pagespeed/insights/?url=http%3A%2F%2Fd1kzdlgex69htr.cloudfront.net%2F&tab=mobile).
 
