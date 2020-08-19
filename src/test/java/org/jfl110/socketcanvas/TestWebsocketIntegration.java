@@ -14,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
+import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
 import org.springframework.messaging.simp.stomp.StompSession;
@@ -43,7 +44,10 @@ public class TestWebsocketIntegration {
 	private static final String USER_INIT_DEST = "/app/canvas/init/";
 
 	private static final String CANVAS_CHANNEL = "/topic/canvas/";
-	private static final String CANVAS_DEST = "/app/canvas/";
+	private static final String CANVAS_DEST = "/app/canvas/line/";
+
+	private static final String CLEAR_CHANNEL = "/topic/clear/";
+	private static final String CLEAR_DEST = "/app/canvas/clear/";
 
 	@LocalServerPort private int port;
 
@@ -68,7 +72,7 @@ public class TestWebsocketIntegration {
 				new Point(12, 11)), "#fff", 10, 0, false));
 
 		// Wait for and verify message received back
-		c1.waitForLineMessage();
+		c1.lineMessageHandler.waitForMessages();
 
 		LineMessageOut msg = c1.lineMessageHandler.receivedObjects.get(0);
 		assertEquals(c1.initMessage.getUserId(), msg.getClientId());
@@ -88,7 +92,7 @@ public class TestWebsocketIntegration {
 		c1.sendLineMessage(new LineMessage("c", 0, ImmutableList.of(
 				new Point(13, 12)), "#fff", 8, 0, false));
 
-		c1.waitForLineMessage();
+		c1.lineMessageHandler.waitForMessages();
 		msg = c1.lineMessageHandler.receivedObjects.get(1);
 		assertEquals(c1.initMessage.getUserId(), msg.getClientId());
 		assertEquals(0, msg.getClientLineNumber());
@@ -102,7 +106,7 @@ public class TestWebsocketIntegration {
 		c1.lineMessageHandler.setObjectCountToWaitFor(1);
 		c1.sendLineMessage(new LineMessage("f", 0, ImmutableList.of(), "#fff", 8, 0, false));
 
-		c1.waitForLineMessage();
+		c1.lineMessageHandler.waitForMessages();
 		msg = c1.lineMessageHandler.receivedObjects.get(2);
 		assertEquals(c1.initMessage.getUserId(), msg.getClientId());
 		assertEquals(0, msg.getClientLineNumber());
@@ -137,8 +141,8 @@ public class TestWebsocketIntegration {
 		c1.sendLineMessage(new LineMessage("s", 1, ImmutableList.of(new Point(15, 13), new Point(15, 12)), "#ccc", 8, 0, true));
 
 		// Both clients get the same message
-		c1.waitForLineMessage();
-		c2.waitForLineMessage();
+		c1.lineMessageHandler.waitForMessages();
+		c2.lineMessageHandler.waitForMessages();
 
 		LineMessageOut c1Message = c1.lineMessageHandler.receivedObjects.get(3);
 		LineMessageOut c2Message = c2.lineMessageHandler.receivedObjects.get(0);
@@ -159,7 +163,25 @@ public class TestWebsocketIntegration {
 
 		// Get the app status endpoint response
 		String statusResponse = new RestTemplate().getForObject("http://localhost:" + port, String.class);
-		assertEquals("App status ok. [2] connected users. [1] canvases. [0] canvases removed. [4] total messages.", statusResponse);
+		assertEquals("App status ok. [2] connected users. [1] canvases. [0] canvases removed. [0] canvases cleared. [4] total messages.",
+				statusResponse);
+
+		// Clear a canvas
+		c1.clearMessageHandler.setObjectCountToWaitFor(1);
+		c2.clearMessageHandler.setObjectCountToWaitFor(1);
+
+		c1.sendClearMessage();
+
+		c1.clearMessageHandler.waitForMessages();
+		c2.clearMessageHandler.waitForMessages();
+
+		assertEquals("cleared", c1.clearMessageHandler.receivedObjects.get(0).getText());
+		assertEquals("cleared", c2.clearMessageHandler.receivedObjects.get(0).getText());
+
+		// Get the app status endpoint response again
+		statusResponse = new RestTemplate().getForObject("http://localhost:" + port, String.class);
+		assertEquals("App status ok. [2] connected users. [0] canvases. [0] canvases removed. [1] canvases cleared. [4] total messages.",
+				statusResponse);
 	}
 
 
@@ -174,6 +196,7 @@ public class TestWebsocketIntegration {
 
 		private final TestingFrameHandler<LineMessageOut> lineMessageHandler = new TestingFrameHandler<>(LineMessageOut.class);
 		private final TestingFrameHandler<InitialCanvasMessage> initMessageHandler = new TestingFrameHandler<>(InitialCanvasMessage.class);
+		private final TestingFrameHandler<ClearedCanvasMessageOut> clearMessageHandler = new TestingFrameHandler<>(ClearedCanvasMessageOut.class);
 		private final String canvasId;
 		private StompSession stompSession;
 		private InitialCanvasMessage initMessage;
@@ -189,6 +212,10 @@ public class TestWebsocketIntegration {
 					new SockJsClient(ImmutableList.of(new WebSocketTransport(new StandardWebSocketClient()))));
 			stompClient.setMessageConverter(new MappingJackson2MessageConverter());
 			stompSession = stompClient.connect(url, new StompSessionHandlerAdapter() {
+				@Override
+				public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
+					throw new RuntimeException("Failure in WebSocket handling", exception);
+				}
 			}).get(1, TimeUnit.SECONDS);
 
 			System.out.println(stompSession.getSessionId());
@@ -196,6 +223,7 @@ public class TestWebsocketIntegration {
 			// Subscribe
 			stompSession.subscribe(CANVAS_CHANNEL + canvasId, lineMessageHandler);
 			stompSession.subscribe(USER_INIT_CHANNEL + canvasId, initMessageHandler);
+			stompSession.subscribe(CLEAR_CHANNEL + canvasId, clearMessageHandler);
 
 			// Send init message and wait
 			initMessageHandler.setObjectCountToWaitFor(1);
@@ -219,11 +247,10 @@ public class TestWebsocketIntegration {
 		}
 
 
-		void waitForLineMessage() throws Exception {
-			if (!lineMessageHandler.objectWaitLatch.await(1, TimeUnit.SECONDS)) {
-				fail("Gave up waiting for line messages");
-			}
+		void sendClearMessage() throws Exception {
+			stompSession.send(CLEAR_DEST + canvasId, "");
 		}
+
 	}
 
 	/**
@@ -248,6 +275,13 @@ public class TestWebsocketIntegration {
 
 		void setObjectCountToWaitFor(int count) {
 			objectWaitLatch = new CountDownLatch(count);
+		}
+
+
+		void waitForMessages() throws Exception {
+			if (!objectWaitLatch.await(1, TimeUnit.SECONDS)) {
+				fail("Gave up waiting for messages");
+			}
 		}
 
 

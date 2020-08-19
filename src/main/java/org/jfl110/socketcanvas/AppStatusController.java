@@ -22,6 +22,7 @@ public class AppStatusController {
 		return "App status ok. [" + simpUserRegistry.getUserCount() + "] connected users."
 				+ " [" + canvasManager.getCanvasCount() + "] canvases."
 				+ " [" + canvasManager.getRemovedCanvasCount() + "] canvases removed."
+				+ " [" + canvasManager.getClearedCanvasCount() + "] canvases cleared."
 				+ " [" + canvasManager.getTotalMessageCount() + "] total messages.";
 	}
 }

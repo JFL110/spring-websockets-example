@@ -111,9 +111,10 @@ public class TestCanvasManager {
 				.parallel()
 				.mapToObj(i -> {
 					return threads.submit(() -> {
+						String canvasId = "c- " + i % 150;
 						when(now.get()).thenReturn(startingTime.plusSeconds(i));
 						canvasManager.handleLineMessage(
-								"c- " + i % 150, // More canvases than allowed so regular cleanup occurs
+								canvasId, // More canvases than allowed so regular cleanup occurs
 								() -> "some-user",
 								new LineMessage(i % 2 == 0 ? "s" : "c", i,
 										ImmutableList.of(
@@ -126,6 +127,10 @@ public class TestCanvasManager {
 
 						if (i % 100 == 0) {
 							canvasManager.cleanupOldCanvases();
+						}
+
+						if (i % 50 == 0) {
+							canvasManager.clearCanvas(canvasId);
 						}
 					});
 				})

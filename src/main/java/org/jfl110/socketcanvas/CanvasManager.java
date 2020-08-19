@@ -46,6 +46,7 @@ class CanvasManager {
 
 	// State
 	private final Map<String, Canvas> canvases = Maps.newConcurrentMap();
+	private final AtomicLong clearedCanvasesCount = new AtomicLong();
 	private final AtomicLong totalMessageCount = new AtomicLong();
 	private final AtomicLong removedCanvasCount = new AtomicLong();
 
@@ -93,6 +94,15 @@ class CanvasManager {
 		} finally {
 			cleanupLock.unlock();
 		}
+	}
+
+
+	/**
+	 * Completely clear a canvas
+	 */
+	void clearCanvas(String id) {
+		canvases.remove(id);
+		clearedCanvasesCount.incrementAndGet();
 	}
 
 
@@ -243,4 +253,10 @@ class CanvasManager {
 	long getTotalMessageCount() {
 		return totalMessageCount.get();
 	}
+
+
+	long getClearedCanvasCount() {
+		return clearedCanvasesCount.get();
+	}
+
 }

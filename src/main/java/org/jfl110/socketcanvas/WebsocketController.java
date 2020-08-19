@@ -24,11 +24,20 @@ public class WebsocketController {
 
 	@Autowired private CanvasManager canvasManager;
 
-	@MessageMapping("/canvas/{canvasId}")
+	@MessageMapping("/canvas/line/{canvasId}")
 	@SendTo("/topic/canvas/{canvasId}")
-	public LineMessageOut send(@DestinationVariable("canvasId") String canvasId, LineMessage message, Principal principal) throws Exception {
+	public LineMessageOut line(@DestinationVariable("canvasId") String canvasId, LineMessage message, Principal principal) throws Exception {
 		LOG.atDebug().log("Got " + message);
 		return canvasManager.handleLineMessage(canvasId, principal, message);
+	}
+
+
+	@MessageMapping("/canvas/clear/{canvasId}")
+	@SendTo("/topic/clear/{canvasId}")
+	public ClearedCanvasMessageOut clear(@DestinationVariable("canvasId") String canvasId, Principal principal) throws Exception {
+		LOG.atInfo().log("Got clear " + canvasId);
+		canvasManager.clearCanvas(canvasId);
+		return new ClearedCanvasMessageOut("cleared");
 	}
 
 
