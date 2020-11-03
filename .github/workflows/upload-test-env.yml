@@ -36,5 +36,5 @@ jobs:
         application_name: spring-websockets-example
         environment_name: SpringWebsocketsExample-env
         version_label: ${{ steps.buildnumber.outputs.build_number }}
-        region: eu-west-2
+        region: us-east-2
         deployment_package: ./build/spring-websockets-eb-bundle.zip
