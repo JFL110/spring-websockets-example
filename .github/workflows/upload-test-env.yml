@@ -1,6 +1,7 @@
 name: Upload to ElasticBeanstalk
 
 on:
+  workflow_dispatch:
   push:
     paths:
     - 'version.properties'
