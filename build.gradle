@@ -1,63 +1,51 @@
 plugins {
-	id 'org.springframework.boot' version '2.2.0.RELEASE'
-	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+    id 'org.springframework.boot' version '2.4.1'
+    id 'io.spring.dependency-management' version "1.0.11.RELEASE"
+    id "io.freefair.lombok" version "5.3.0"
+    id "com.palantir.docker" version "0.26.0"
 }
 
-apply from : 'common-build.gradle'
+apply from: 'common-build.gradle'
 
-configurations {
-	developmentOnly
-	runtimeClasspath {
-		extendsFrom developmentOnly
-	}
-}
+project.version = 'v2.0'
 
 // TestCanvasManager tests limits and uses a lot of memory
-test{
-  minHeapSize = "512m"
-  maxHeapSize = "1024m"
- }
- 
-// Task to bundle .platform, Procfile and the jar into a zip 
-task ebZip(type: Zip ) {
-   dependsOn 'bootJar'
-   from ('./build/libs/'){
-   	include 'spring-websockets.jar'
-   }
-   from ('./'){
-   	include '.platform/**'
-   	include 'Procfile'
-   }
-   archiveName 'spring-websockets-eb-bundle.zip'
-   destinationDir(file('./build/'))
+test {
+    minHeapSize = "512m"
+    maxHeapSize = "1024m"
+}
+
+bootJar {
+    // Remove version number from bootJar
+    archiveFileName = "${archiveBaseName.get()}.${archiveExtension.get()}"
+}
+
+docker {
+    name "spring-websockets-example:${project.version}"
+    tag "ecrTag", "953430798342.dkr.ecr.eu-west-2.amazonaws.com/spring-websockets-example:${project.version}"
+    tag "ecrLatestTag", "953430798342.dkr.ecr.eu-west-2.amazonaws.com/spring-websockets-example:latest"
+    dockerfile project.file('Dockerfile')
+    files tasks.bootJar.outputs
 }
 
 dependencies {
+    // Spring
+    implementation 'org.springframework.boot:spring-boot-starter-web'
 
-	// Spring
-	compile 'org.springframework.boot:spring-boot-starter-thymeleaf:2.3.3.RELEASE'
-	compile 'org.springframework.boot:spring-boot-starter-web:2.3.3.RELEASE'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools:2.3.3.RELEASE'
-	
-	compile group: 'org.springframework', name: 'spring-websocket', version: '5.2.1.RELEASE'
-	compile group: 'org.springframework', name: 'spring-messaging', version: '5.2.1.RELEASE'
+    implementation 'org.springframework:spring-websocket'
+    implementation 'org.springframework:spring-messaging'
 
     // Generally useful java things
-    compile group: 'com.google.guava', name: 'guava', version: '29.0-jre'
-    
-    // Logging
-    compile group: 'org.apache.logging.log4j', name: 'log4j-core', version: '2.13.3'
-	compile group: 'org.apache.logging.log4j', name: 'log4j-api', version: '2.13.3'
-	
+    implementation group: 'com.google.guava', name: 'guava', version: '29.0-jre'
+
     // Test utilities
-    testImplementation group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'   
-    testImplementation group: 'junit', name: 'junit', version:'4.12'
+    testImplementation group: 'org.hamcrest', name: 'hamcrest-library', version: '1.3'
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '2.4.0'
     testImplementation 'com.github.stefanbirkner:system-rules:1.19.0'
-    testImplementation group: 'org.springframework', name: 'spring-test', version: '5.2.1.RELEASE'
-    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test', version: '2.3.3.RELEASE'
-    
+    testImplementation group: 'org.springframework', name: 'spring-test'
+    testImplementation group: 'org.springframework.boot', name: 'spring-boot-starter-test'
 }
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11

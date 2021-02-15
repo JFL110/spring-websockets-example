@@ -1,0 +1,35 @@
+name: Upload to ECR & ECS
+
+on:
+  release:
+    types: [released]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-2
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Gradle permissions
+        run: chmod +x gradlew
+      - name: Test
+        run: ./gradlew -Pusername=${{ github.actor }} -Ppassword=${{ secrets.GITHUB_TOKEN }} test
+      - name: Docker Build & Tag
+        run: ./gradlew -Pusername=${{ github.actor }} -Ppassword=${{ secrets.GITHUB_TOKEN }} --stacktrace --info dockerPushEcrTag
+      - name: Docker Build & Tag
+        run: ./gradlew -Pusername=${{ github.actor }} -Ppassword=${{ secrets.GITHUB_TOKEN }} --stacktrace --info dockerPushEcrLatestTag
+      - name: ECS update service
+        run: aws ecs update-service --cluster demo-projects --service spring-websockets-example --force-new-deployment

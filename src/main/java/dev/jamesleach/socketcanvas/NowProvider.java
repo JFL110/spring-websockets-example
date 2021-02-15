@@ -1,4 +1,6 @@
-package org.jfl110.socketcanvas;
+package dev.jamesleach.socketcanvas;
+
+import org.springframework.stereotype.Component;
 
 import java.time.ZonedDateTime;
 import java.util.function.Supplier;
@@ -10,6 +12,7 @@ import java.util.function.Supplier;
  * 
  * @author jim
  */
+@Component
 class NowProvider implements Supplier<ZonedDateTime> {
 	@Override
 	public ZonedDateTime get() {

@@ -1,30 +1,24 @@
-package org.jfl110.socketcanvas;
+package dev.jamesleach.socketcanvas;
 
-import static org.junit.Assert.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
+import org.junit.Test;
 
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import org.junit.Test;
-
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Maps;
+import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class TestCanvasManager {
-
 	private final ZonedDateTime startingTime = ZonedDateTime.of(2019, 1, 1, 1, 1, 1, 1, ZoneId.of("UTC"));
 	private final NowProvider now = mock(NowProvider.class);
 	private final CanvasManager canvasManager = new CanvasManager(now);
@@ -34,7 +28,6 @@ public class TestCanvasManager {
 	 */
 	@Test
 	public void testCleanup() {
-
 		// Create a lot of canvases
 		Map<String, ZonedDateTime> canvasCreationTimes = Maps.newConcurrentMap();
 		IntStream.range(0, 1500)
@@ -109,31 +102,29 @@ public class TestCanvasManager {
 		ExecutorService threads = Executors.newFixedThreadPool(10);
 		IntStream.range(0, 5000)
 				.parallel()
-				.mapToObj(i -> {
-					return threads.submit(() -> {
-						String canvasId = "c- " + i % 150;
-						when(now.get()).thenReturn(startingTime.plusSeconds(i));
-						canvasManager.handleLineMessage(
-								canvasId, // More canvases than allowed so regular cleanup occurs
-								() -> "some-user",
-								new LineMessage(i % 2 == 0 ? "s" : "c", i,
-										ImmutableList.of(
-												new Point(10, 10),
-												new Point(12, 12)),
-										"#fff",
-										10,
-										0,
-										true));
+				.mapToObj(i -> threads.submit(() -> {
+					String canvasId = "c- " + i % 150;
+					when(now.get()).thenReturn(startingTime.plusSeconds(i));
+					canvasManager.handleLineMessage(
+							canvasId, // More canvases than allowed so regular cleanup occurs
+							() -> "some-user",
+							new LineMessage(i % 2 == 0 ? "s" : "c", i,
+									ImmutableList.of(
+											new Point(10, 10),
+											new Point(12, 12)),
+									"#fff",
+									10,
+									0,
+									true));
 
-						if (i % 100 == 0) {
-							canvasManager.cleanupOldCanvases();
-						}
+					if (i % 100 == 0) {
+						canvasManager.cleanupOldCanvases();
+					}
 
-						if (i % 50 == 0) {
-							canvasManager.clearCanvas(canvasId);
-						}
-					});
-				})
+					if (i % 50 == 0) {
+						canvasManager.clearCanvas(canvasId);
+					}
+				}))
 				.collect(Collectors.toList())
 				.forEach(f -> {
 					try {

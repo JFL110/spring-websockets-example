@@ -1,8 +1,8 @@
-package org.jfl110;
-
-import static org.junit.Assert.assertEquals;
+package dev.jamesleach.socketcanvas;
 
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test that should always pass to verify repository setup
@@ -11,7 +11,6 @@ import org.junit.Test;
  *
  */
 public class TestNothing {
-
 	@Test
 	public void testNothing() {
 		assertEquals("a", "a");
