@@ -1,6 +1,7 @@
 name: Upload to ECR & ECS
 
 on:
+  workflow_dispatch:
   release:
     types: [released]
 
