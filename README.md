@@ -5,7 +5,7 @@ A demo application that manages drawing canvases via websockets with Spring.
 
 - The frontend to this app is hosted [here on Cloudfront](http://d1kzdlgex69htr.cloudfront.net/random)
 - Frontend source is [here](https://github.com/JFL110/spring-websockets-example-frontend)
-- The status of the App can be checked [here](http://springwebsocketsexample2-env.eba-9wepzsai.eu-west-2.elasticbeanstalk.com/)
+- The status of the App can be checked [here](http://demo-project-alb-2139081777.eu-west-2.elb.amazonaws.com:8083/)
 
 ## Operation
 The application uses Spring to expose a websocket that clients use to send and receive messages regarding the creation, continuation and termination of lines drawn by users on a canvas. Canvas' have an identifier determined by the user's URL. The messages are applied to a simple in-memory state representation of each canvas and forwarded to all other clients that are viewing the same canvas. Upon initialisation, clients are sent a complete set of all the lines on the canvas. A channel is also exposed to allow clients to clear the canvas.
