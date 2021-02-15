@@ -10,7 +10,7 @@ A demo application that manages drawing canvases via websockets with Spring.
 ## Operation
 The application uses Spring to expose a websocket that clients use to send and receive messages regarding the creation, continuation and termination of lines drawn by users on a canvas. Canvas' have an identifier determined by the user's URL. The messages are applied to a simple in-memory state representation of each canvas and forwarded to all other clients that are viewing the same canvas. Upon initialisation, clients are sent a complete set of all the lines on the canvas. A channel is also exposed to allow clients to clear the canvas.
 
-To keep the consumed resources of this app within the AWS free tier, only a single, small server instance is used. Limits are placed on the number and size of canvases and a scheduled task is used to perform cleanup. Expansion of this application would require a way to share canvas state between instances, or to cleverly route requests to specific instances.
+To keep the consumed resources of this app within the AWS free tier, only a single EC2 instance is used to host this and other ECS projects. Limits are placed on the number and size of canvases and a scheduled task is used to perform cleanup. Expansion of this application would require a way to share canvas state between instances, or to cleverly route requests to specific instances.
 
 Websocket operation is tested by spinning up an in-test webserver and performing real client interactions. Concurrent modification and cleanup of canvases is also tested.
 
