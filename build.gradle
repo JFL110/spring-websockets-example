@@ -7,7 +7,7 @@ plugins {
 
 apply from: 'common-build.gradle'
 
-project.version = 'v2.0'
+project.version = 'v2.1'
 
 // TestCanvasManager tests limits and uses a lot of memory
 test {

@@ -43,10 +43,10 @@ class WebsocketConfig implements WebSocketMessageBrokerConfigurer {
     };
 
     registry.addEndpoint("/canvas")
-      .setAllowedOriginPatterns("http://*")
+      .setAllowedOriginPatterns("http://*", "https://*")
       .setHandshakeHandler(handshaker);
     registry.addEndpoint("/canvas")
-      .setAllowedOriginPatterns("http://*")
+      .setAllowedOriginPatterns("http://*", "https://*")
       .setHandshakeHandler(handshaker)
       .withSockJS();
   }
