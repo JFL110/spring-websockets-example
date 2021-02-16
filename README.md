@@ -1,11 +1,11 @@
 # Spring Websockets Example App
 A demo application that manages drawing canvases via websockets with Spring. 
 
-[![Java CI](https://github.com/JFL110/spring-websockets-example/workflows/Java%20CI/badge.svg)](https://github.com/JFL110/spring-websockets-example/actions?query=workflow%3A%22Java+CI%22) [![Deploy to Elastic Beanstalk](https://github.com/JFL110/spring-websockets-example/workflows/Upload%20to%20ElasticBeanstalk/badge.svg)](https://github.com/JFL110/spring-websockets-example/actions?query=workflow%3A%22Upload+to+ElasticBeanstalk%22) [![codecov](https://codecov.io/gh/JFL110/spring-websockets-example/branch/master/graph/badge.svg?token=RpMWGDu3b4)](https://codecov.io/gh/JFL110/spring-websockets-example)
+[![Java CI](https://github.com/JFL110/spring-websockets-example/workflows/Java%20CI/badge.svg)](https://github.com/JFL110/spring-websockets-example/actions?query=workflow%3A%22Java+CI%22) [![Upload to ECR & ECS](https://github.com/JFL110/spring-websockets-example/workflows/Upload%20to%20ECR%20&%20ECS/badge.svg)](https://github.com/JFL110/spring-websockets-example/actions?query=workflow%3A%22Upload+to+ECR+%26+ECS%22) [![codecov](https://codecov.io/gh/JFL110/spring-websockets-example/branch/master/graph/badge.svg?token=RpMWGDu3b4)](https://codecov.io/gh/JFL110/spring-websockets-example)
 
 - The frontend to this app is hosted [here on Cloudfront](http://d1kzdlgex69htr.cloudfront.net/random)
 - Frontend source is [here](https://github.com/JFL110/spring-websockets-example-frontend)
-- The status of the App can be checked [here](http://springwebsocketsexample2-env.eba-9wepzsai.eu-west-2.elasticbeanstalk.com/)
+- The status of the App can be checked [here](http://demo-project-alb-2139081777.eu-west-2.elb.amazonaws.com:8083/)
 
 ## Operation
 The application uses Spring to expose a websocket that clients use to send and receive messages regarding the creation, continuation and termination of lines drawn by users on a canvas. Canvas' have an identifier determined by the user's URL. The messages are applied to a simple in-memory state representation of each canvas and forwarded to all other clients that are viewing the same canvas. Upon initialisation, clients are sent a complete set of all the lines on the canvas. A channel is also exposed to allow clients to clear the canvas.
